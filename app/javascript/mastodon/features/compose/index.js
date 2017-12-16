@@ -5,13 +5,13 @@ import PropTypes from 'prop-types';
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import { connect } from 'react-redux';
 import { mountCompose, unmountCompose } from '../../actions/compose';
-import { Link } from 'react-router-dom';
+import { Link, withRouter } from 'react-router-dom';
 import { injectIntl, defineMessages } from 'react-intl';
 import SearchContainer from './containers/search_container';
 import Motion from '../ui/util/optional_motion';
 import spring from 'react-motion/lib/spring';
 import SearchResultsContainer from './containers/search_results_container';
-import { changeComposing } from '../../actions/compose';
+import { changeCompose, changeComposing } from '../../actions/compose';
 
 const messages = defineMessages({
   start: { id: 'getting_started.heading', defaultMessage: 'Getting started' },
@@ -30,6 +30,7 @@ const mapStateToProps = state => ({
 
 @connect(mapStateToProps)
 @injectIntl
+@withRouter
 export default class Compose extends React.PureComponent {
 
   static propTypes = {
@@ -37,8 +38,19 @@ export default class Compose extends React.PureComponent {
     columns: ImmutablePropTypes.list.isRequired,
     multiColumn: PropTypes.bool,
     showSearch: PropTypes.bool,
+    location: PropTypes.object,
     intl: PropTypes.object.isRequired,
   };
+
+  componentWillMount () {
+    if (this.props.location.search) {
+      const params = new URLSearchParams(this.props.location.search);
+      const text =
+        [params.get('title'), params.get('text'), params.get('url')]
+        .filter(s => s).join(' ');
+      this.props.dispatch(changeCompose(text));
+    }
+  }
 
   componentDidMount () {
     this.props.dispatch(mountCompose());
